@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           c14n
-version:        0.1.0.1
+version:        0.1.0.2
 synopsis:       Bindings to the c14n implementation in libxml.
 description:    Haskell bindings for the c14n implementation in libxml (XML canonicalisation). See the README at <https://github.com/mbg/c14n#readme> for more information.
 category:       XML
