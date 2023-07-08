@@ -5,9 +5,9 @@
 -- file in the root directory of this source tree.                            --
 --------------------------------------------------------------------------------
 
--- | Provides a mid-level interface to libxml's implementation of c14n, i.e. 
--- XML canonicalisation. 
-module Text.XML.C14N ( 
+-- | Provides a mid-level interface to libxml's implementation of c14n, i.e.
+-- XML canonicalisation.
+module Text.XML.C14N (
     -- * Canonicalisation
     c14n_1_0,
     c14n_exclusive_1_0,
@@ -15,7 +15,7 @@ module Text.XML.C14N (
     c14n,
 
     -- * Parsing
-    xml_opt_recover, 
+    xml_opt_recover,
     xml_opt_noent,
     xml_opt_dtdload,
     xml_opt_dtdattr,
@@ -39,7 +39,7 @@ module Text.XML.C14N (
     xml_opt_ignore_env,
     xml_opt_big_lines,
     parseXml
-) where 
+) where
 
 --------------------------------------------------------------------------------
 
@@ -49,7 +49,7 @@ import Data.Bits
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Unsafe as BS
 
-import Text.XML.C14N.LibXML 
+import Text.XML.C14N.LibXML
 
 import Foreign.Ptr
 import Foreign.ForeignPtr
@@ -60,70 +60,70 @@ import Foreign.C.Types
 
 --------------------------------------------------------------------------------
 
--- | 'parseXml' @parseOpts text@ parses @text@ into an XML document using 
+-- | 'parseXml' @parseOpts text@ parses @text@ into an XML document using
 -- libxml according to options given by @parseOpts@.
-parseXml :: [CInt] -> BS.ByteString -> IO (ForeignPtr LibXMLDoc) 
-parseXml opts bin = newForeignPtr xmlFreeDoc =<< 
-    (BS.unsafeUseAsCStringLen bin $ \(ptr, len) ->  
-        throwErrnoIfNull "xmlReadMemory" $ xmlReadMemory 
+parseXml :: [CInt] -> BS.ByteString -> IO (ForeignPtr LibXMLDoc)
+parseXml opts bin = newForeignPtr xmlFreeDoc =<<
+    (BS.useAsCStringLen bin $ \(ptr, len) ->
+        throwErrnoIfNull "xmlReadMemory" $ xmlReadMemory
             ptr (fromIntegral len) nullPtr nullPtr (foldl (.|.) 0 opts))
 
 -- | 'withXmlXPathNodeList' @docPtr xPathLocation continuation@ evaluates the
--- XPath location path given by @xPathLocation@ in the document context 
+-- XPath location path given by @xPathLocation@ in the document context
 -- pointed at by @docPtr@ and calls @continuation@ with the result.
-withXmlXPathNodeList :: Ptr LibXMLDoc 
-                     -> BS.ByteString 
-                     -> (Ptr LibXMLNodeSet -> IO a) 
+withXmlXPathNodeList :: Ptr LibXMLDoc
+                     -> BS.ByteString
+                     -> (Ptr LibXMLNodeSet -> IO a)
                      -> IO a
-withXmlXPathNodeList docPtr expr cont = 
+withXmlXPathNodeList docPtr expr cont =
     -- initialise a new XPath context, run the continuation with the context
     -- as argument, and then free up the context again afterwards
-    bracket (xmlXPathNewContext docPtr) xmlXPathFreeContext $ \ctx -> 
+    bracket (xmlXPathNewContext docPtr) xmlXPathFreeContext $ \ctx ->
     -- get a C string pointer for the XPath location path
-    BS.unsafeUseAsCString expr $ \strPtr ->
+    BS.useAsCString expr $ \strPtr ->
     -- evaluate the XPath location path and free up the resulting object
-    -- after the continuation is finished; see 
+    -- after the continuation is finished; see
     -- http://xmlsoft.org/html/libxml-xpath.html#xmlXPathEval
     bracket
-        ( throwErrnoIfNull "xmlXPathEval" $ 
+        ( throwErrnoIfNull "xmlXPathEval" $
             xmlXPathEval (castPtr strPtr) ctx
         )
-        xmlXPathFreeObject 
+        xmlXPathFreeObject
         -- the XPath object structure contains the node set pointer
-        -- at offset 8; see 
+        -- at offset 8; see
         -- http://xmlsoft.org/html/libxml-xpath.html#xmlXPathObject
         $ \a -> peekByteOff a 8 >>= cont
 
--- | 'c14n' @parseOpts mode nsPrefixes keepComments xPathLocation input@ 
+-- | 'c14n' @parseOpts mode nsPrefixes keepComments xPathLocation input@
 -- canonicalises the document given by @input@, which is parsed using options
--- specified by @parseOpts@. The @mode@ argument deteremines the 
+-- specified by @parseOpts@. The @mode@ argument deteremines the
 -- canonicalisation mode to use. @nsPrefixes@ gives a (potentially empty)
--- list of namespace prefixes which is used when @mode@ is 
+-- list of namespace prefixes which is used when @mode@ is
 -- 'c14n_exclusive_1_0'. If @keepComments@ is 'True', all comments are kept
 -- in the output. @xPathLocation@ is used to select a set of nodes that should
 -- be included in the canonicalised result.
 c14n :: [CInt]
-     -> CInt 
-     -> [BS.ByteString] 
-     -> Bool 
-     -> Maybe BS.ByteString 
-     -> BS.ByteString 
+     -> CInt
+     -> [BS.ByteString]
+     -> Bool
+     -> Maybe BS.ByteString
+     -> BS.ByteString
      -> IO BS.ByteString
-c14n opts mode nsPrefixes keepComments xpath bin = 
+c14n opts mode nsPrefixes keepComments xpath bin =
     -- parse the input xml
     parseXml opts bin >>= \docPtr ->
     -- wrap the pointer we got in a foreign pointer
-    withForeignPtr docPtr $ \ptr -> 
+    withForeignPtr docPtr $ \ptr ->
     -- convert the namespace prefixes into C strings
-    withMany BS.unsafeUseAsCString nsPrefixes $ \inclPtr ->
+    withMany BS.useAsCString nsPrefixes $ \inclPtr ->
     -- turn the Haskell list of C strings into a C array,
     -- terminated by NULL
-    withArray0 nullPtr inclPtr $ \arrayPtr -> 
-    -- get a pointer to the node set 
+    withArray0 nullPtr inclPtr $ \arrayPtr ->
+    -- get a pointer to the node set
     maybeWith (withXmlXPathNodeList ptr) xpath $ \nsPtr ->
     -- allocate some memory for a pointer to the results
     alloca $ \outPtr -> do
-        -- convert the option determining whether to keep comments from a 
+        -- convert the option determining whether to keep comments from a
         -- Haskell boolean to a CInt
         let commentsOpt = fromIntegral (fromEnum keepComments)
         -- cast from CChar pointers to whatever LibXMLChar is (e.g. Word8)
@@ -134,13 +134,13 @@ c14n opts mode nsPrefixes keepComments xpath bin =
         -- this function returns the number of bytes that were written
         -- to outPtr or a negative value if this fails
         numBytes <- throwErrnoIf (<0) "xmlC14NDocDumpMemory" $
-            xmlC14NDocDumpMemory ptr nsPtr mode prefixesPtr commentsOpt outPtr 
+            xmlC14NDocDumpMemory ptr nsPtr mode prefixesPtr commentsOpt outPtr
 
-        -- dereference the results pointer 
+        -- dereference the results pointer
         ptrPtr <- peek outPtr
 
         -- construct a ByteString from the C string and return it
-        BS.unsafePackCStringFinalizer 
+        BS.unsafePackCStringFinalizer
             ptrPtr (fromIntegral numBytes) (freeXml ptrPtr)
 
 --------------------------------------------------------------------------------
