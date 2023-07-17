@@ -1,28 +1,29 @@
-name:                c14n
-version:             0.1.0.2
-github:              "mbg/c14n"
-license:             MIT
-author:              "Michael B. Gale"
-maintainer:          "github@michael-gale.co.uk"
-copyright:           "Copyright (c) Michael B. Gale"
-category:            XML
-synopsis:            Bindings to the c14n implementation in libxml.
+name: c14n
+version: 0.1.0.2
+github: "mbg/c14n"
+license: MIT
+author: "Michael B. Gale"
+maintainer: "github@michael-gale.co.uk"
+copyright: "Copyright (c) Michael B. Gale"
+category: XML
+synopsis: Bindings to the c14n implementation in libxml.
 
-description:         "Haskell bindings for the c14n implementation in libxml (XML canonicalisation).
-                      See the README at <https://github.com/mbg/c14n#readme> for more information."
+description:
+  "Haskell bindings for the c14n implementation in libxml (XML canonicalisation).
+  See the README at <https://github.com/mbg/c14n#readme> for more information."
 
 pkg-config-dependencies:
-- libxml-2.0
+  - libxml-2.0
 
 extra-libraries:
-- xml2
+  - xml2
 
 dependencies:
-- base >= 4.8 && < 5
-- bytestring >= 0.9 && < 0.12
+  - base >= 4.8 && < 5
+  - bytestring >= 0.9 && < 0.12
 
 library:
-    source-dirs: src
-    c-sources: cbits/*.c
-    ghc-options:
+  source-dirs: src
+  c-sources: cbits/*.c
+  ghc-options:
     - -W
