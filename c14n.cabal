@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
 name:           c14n
-version:        0.1.0.2
+version:        0.1.0.3
 synopsis:       Bindings to the c14n implementation in libxml.
 description:    Haskell bindings for the c14n implementation in libxml (XML canonicalisation). See the README at <https://github.com/mbg/c14n#readme> for more information.
 category:       XML
