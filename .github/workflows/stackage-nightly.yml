@@ -1,6 +1,10 @@
 name: "Stackage Nightly"
 
 on:
+  push:
+    paths:
+      - ".github/workflows/stackage-nightly.yml"
+  workflow_dispatch:
   schedule:
     - cron: "5 6 * * *"
 
