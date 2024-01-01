@@ -1,22 +1,22 @@
 # c14n
 
 ![GitHub](https://img.shields.io/github/license/mbg/c14n)
-![Haskell CI](https://github.com/mbg/c14n/workflows/Haskell%20CI/badge.svg?branch=master)
-![stackage-nightly](https://github.com/mbg/c14n/workflows/stackage-nightly/badge.svg)
+[![Haskell](https://github.com/mbg/c14n/actions/workflows/haskell.yml/badge.svg)](https://github.com/mbg/c14n/actions/workflows/haskell.yml)
+[![Stackage Nightly](https://github.com/mbg/c14n/actions/workflows/stackage-nightly.yml/badge.svg)](https://github.com/mbg/c14n/actions/workflows/stackage-nightly.yml)
 [![Hackage](https://img.shields.io/hackage/v/c14n)](https://hackage.haskell.org/package/c14n)
 
 Haskell bindings for the c14n implementation in libxml (XML canonicalisation). Unfortunately there is (at the time of writing) no pure Haskell implementation, so this seems like the best option.
 
 ## Requirements
 
-You need to have `libxml2` installed, including on macOS (with `brew install libxml2`). Then build with `stack build`. 
+You need to have `libxml2` installed, including on macOS (with `brew install libxml2`). Then build with `stack build`.
 
 ## Usage
 
 The `Text.XML.C14N` module exports a function named `c14n` which provides a mid-level interface to the canonicalisation function from `libxml2`. It will handle most of the marshalling, but not much more. For example:
 
 ```haskell
-> c14n [] c14n_1_1 [] False Nothing "<root>foo<!-- comment -->bar</root>" 
+> c14n [] c14n_1_1 [] False Nothing "<root>foo<!-- comment -->bar</root>"
 "<root>foobar</root>"
 ```
 
