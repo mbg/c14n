@@ -1,56 +1,32 @@
-name: Haskell CI
+name: Haskell
 
 on:
   push:
     paths:
-      - 'cbits/**'
-      - 'src/**'
-      - 'package.yaml'
-      - 'stack*.yaml'
+      - ".github/workflows/haskell.yml"
+      - "cbits/**"
+      - "src/**"
+      - "package.yaml"
+      - "stack*.yaml"
   pull_request:
+    branches: [master]
 
 jobs:
   build:
-    strategy: 
+    strategy:
       matrix:
-        resolver: 
+        resolver:
           - stack
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1  
-    
-    - name: Install system dependencies 
-      run: |
-        sudo apt-get install libxml2-dev
+      - name: Install system dependencies
+        run: |
+          sudo apt-get install libxml2-dev
 
-    - name: Install the Haskell Stack 
-      run: |
-        mkdir -p ~/.local/bin
-        curl -L https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+      - uses: actions/checkout@v4
 
-    - name: Cache .stack
-      id: cache-stack
-      uses: actions/cache@v1
-      with:
-        path: ~/.stack
-        key: ${{ runner.os }}-${{ matrix.resolver }}-${{ hashFiles(format('{0}.yaml', matrix.resolver)) }}
-        restore-keys: |
-            ${{ runner.os }}-${{ matrix.resolver }}-
-            ${{ runner.os }}-
-
-    - name: Install GHC 
-      run: |
-        export PATH=$HOME/.local/bin:$PATH
-        stack --stack-yaml=${{ matrix.resolver }}.yaml --no-terminal --install-ghc setup
-        
-    - name: Install dependencies
-      run: |
-        export PATH=$HOME/.local/bin:$PATH
-        stack --stack-yaml=${{ matrix.resolver }}.yaml --no-terminal build --only-dependencies --fast
-        
-    - name: Build 
-      run: |
-        export PATH=$HOME/.local/bin:$PATH
-        stack --stack-yaml=${{ matrix.resolver }}.yaml --no-terminal build --fast
+      - uses: mbg/actions/stack/build@v0.1
+        with:
+          resolver: ${{ matrix.resolver }}
